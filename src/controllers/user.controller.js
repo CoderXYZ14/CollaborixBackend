@@ -3,6 +3,20 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 
+const generateAccessAndRefreshToken = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+    return { accessToken, refreshToken };
+  } catch (err) {
+    throw new Error(500, "Error generating access and refresh token");
+  }
+};
+
 const registerUser = asyncHandler(async (req, res) => {
   const { fullName, email, username, password } = req.body;
 
@@ -97,3 +111,5 @@ const logoutUser = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User logged out successfully"));
 });
+
+export { registerUser, loginUser, logoutUser };
