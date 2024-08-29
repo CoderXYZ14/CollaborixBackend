@@ -7,3 +7,4 @@ router
   .route("/register")
   .post(upload.fields([{ name: profilePhoto }]), registerUser);
 router.route("login").post(loginUser);
+router.route("/logout").post(verifyJWT, logoutUser);
