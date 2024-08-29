@@ -2,6 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
 import { SALT_ROUNDS } from "../constants";
+import { asyncHandler } from "../utils/asyncHandler";
 
 const userSchema = new Schema(
   {
@@ -47,18 +48,21 @@ const userSchema = new Schema(
   }
 );
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  try {
-    const salt = await bcryptjs.genSalt(SALT_ROUNDS);
-    this.password = await bcryptjs.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
+userSchema.pre(
+  "save",
+  asyncHandler(async (next) => {
+    if (!this.isModified("password")) return next();
+    try {
+      const salt = await bcryptjs.genSalt(SALT_ROUNDS);
+      this.password = await bcryptjs.hash(this.password, salt);
+      next();
+    } catch (err) {
+      next(err);
+    }
+  })
+);
 
-userSchema.methods.generateAccessToken = function () {
+userSchema.methods.generateAccessToken = () => {
   return jwt.sign(
     {
       _id: this.id,
@@ -73,7 +77,7 @@ userSchema.methods.generateAccessToken = function () {
   );
 };
 
-userSchema.methods.generateRefreshToken = function () {
+userSchema.methods.generateRefreshToken = () => {
   return jwt.sign(
     {
       _id: this.id,
