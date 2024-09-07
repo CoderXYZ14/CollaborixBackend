@@ -1,8 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcryptjs from "bcryptjs";
-import { SALT_ROUNDS } from "../constants";
-import { asyncHandler } from "../utils/asyncHandler";
+import { SALT_ROUNDS } from "../constants.js";
 
 const userSchema = new Schema(
   {
@@ -26,9 +25,6 @@ const userSchema = new Schema(
       trim: true,
       index: true,
     },
-    profilePhoto: {
-      type: String,
-    },
     friendList: [
       {
         type: Schema.Types.ObjectId,
@@ -48,21 +44,21 @@ const userSchema = new Schema(
   }
 );
 
-userSchema.pre(
-  "save",
-  asyncHandler(async (next) => {
-    if (!this.isModified("password")) return next();
-    try {
-      const salt = await bcryptjs.genSalt(SALT_ROUNDS);
-      this.password = await bcryptjs.hash(this.password, salt);
-      next();
-    } catch (err) {
-      next(err);
-    }
-  })
-);
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  try {
+    const salt = await bcryptjs.genSalt(SALT_ROUNDS);
+    this.password = await bcryptjs.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
-userSchema.methods.generateAccessToken = () => {
+userSchema.methods.isPasswordCorrect = function (password) {
+  return bcryptjs.compare(password, this.password);
+};
+userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
       _id: this.id,
@@ -77,7 +73,7 @@ userSchema.methods.generateAccessToken = () => {
   );
 };
 
-userSchema.methods.generateRefreshToken = () => {
+userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
       _id: this.id,
