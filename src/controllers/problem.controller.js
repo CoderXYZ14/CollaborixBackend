@@ -39,4 +39,14 @@ const addQuestions = async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, problem, "Problem added  successfully"));
 };
+
+const getQuestions = async (req, res) => {
+  const problems = await Problem.find().sort("order");
+  if (!problems || problems.length === 0) {
+    throw new ApiError(404, "No questions found");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, problems, "Problems retrieved successfully"));
+};
 export { addQuestions };
