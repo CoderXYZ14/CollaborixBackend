@@ -49,4 +49,4 @@ const getQuestions = async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, problems, "Problems retrieved successfully"));
 };
-export { addQuestions };
+export { addQuestions, getQuestions };
