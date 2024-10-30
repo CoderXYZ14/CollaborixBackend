@@ -1,6 +1,6 @@
-import { Problem } from "../models/problem.model";
-import { ApiError } from "../utils/ApiError";
-import { ApiResponse } from "../utils/ApiResponse";
+import { Problem } from "../models/problem.model.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 const addQuestions = async (req, res) => {
   const { id, title, difficulty, category, videoId } = req.body;
@@ -31,7 +31,7 @@ const addQuestions = async (req, res) => {
     videoId,
   });
 
-  if (problem) {
+  if (!problem) {
     throw new ApiError(500, "Something went wrong while adding question");
   }
 

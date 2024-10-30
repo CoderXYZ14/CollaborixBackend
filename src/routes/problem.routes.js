@@ -8,6 +8,6 @@ import {
 const router = Router();
 
 router.route("/add-questions").post(asyncHandler(addQuestions));
-router.router("/get-questions").post(asyncHandler(getQuestions));
+router.route("/get-questions").get(asyncHandler(getQuestions));
 
 export default router;
