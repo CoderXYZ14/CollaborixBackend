@@ -31,6 +31,12 @@ const userSchema = new Schema(
         ref: "Friend",
       },
     ],
+    solvedProblemList: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Problem",
+      },
+    ],
     password: {
       type: String,
       required: [true, "Password is required"],
