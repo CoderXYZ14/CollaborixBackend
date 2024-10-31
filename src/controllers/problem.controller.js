@@ -70,4 +70,4 @@ const submitQuestion = async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, problem, "Problem marked as solved"));
 };
-export { addQuestions, getQuestions };
+export { addQuestions, getQuestions, submitQuestion };
