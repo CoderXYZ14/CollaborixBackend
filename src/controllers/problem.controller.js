@@ -102,7 +102,6 @@ const getQuestions = async (req, res, next) => {
     }
   }
 };
-
 const submitQuestion = async (req, res) => {
   const { problemId } = req.params;
   const userId = req.user._id;
