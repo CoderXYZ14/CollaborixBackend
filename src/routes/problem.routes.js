@@ -11,7 +11,7 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 router.route("/add-questions").post(asyncHandler(addQuestions));
-router.route("/get-questions").get(asyncHandler(getQuestions));
+router.route("/get-questions").get(verifyJWT, asyncHandler(getQuestions));
 router
   .route("/submit/:problemId")
   .post(verifyJWT, asyncHandler(submitQuestion));

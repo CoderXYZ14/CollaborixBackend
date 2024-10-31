@@ -41,14 +41,66 @@ const addQuestions = async (req, res) => {
     .json(new ApiResponse(200, problem, "Problem added  successfully"));
 };
 
-const getQuestions = async (req, res) => {
-  const problems = await Problem.find().sort("order");
-  if (!problems || problems.length === 0)
-    throw new ApiError(404, "No questions found");
+const getQuestions = async (req, res, next) => {
+  try {
+    // Get base problems list
+    const problems = await Problem.find().sort("order");
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, problems, "Problems retrieved successfully"));
+    // If user is authenticated, add solved status
+    if (req.user) {
+      const solvedProblems = new Set(
+        req.user.solvedProblemList.map((p) => p.toString())
+      );
+
+      const problemsWithStatus = problems.map((problem) => ({
+        ...problem.toObject(),
+        submitted: solvedProblems.has(problem._id.toString()),
+      }));
+
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            problemsWithStatus,
+            "Problems retrieved successfully"
+          )
+        );
+    }
+
+    // For unauthenticated users, return problems with submitted = false
+    const problemsWithoutStatus = problems.map((problem) => ({
+      ...problem.toObject(),
+      submitted: false,
+    }));
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          problemsWithoutStatus,
+          "Problems retrieved successfully"
+        )
+      );
+  } catch (error) {
+    if (error instanceof ApiError) {
+      res
+        .status(error.status)
+        .json(new ApiResponse(error.status, null, error.message));
+    } else {
+      console.error("Error fetching questions:", error);
+      res
+        .status(500)
+        .json(
+          new ApiResponse(
+            500,
+            null,
+            "An error occurred while retrieving problems"
+          )
+        );
+    }
+  }
 };
 
 const submitQuestion = async (req, res) => {
@@ -75,21 +127,35 @@ const submitQuestion = async (req, res) => {
 const solvedStatus = async (req, res) => {
   const { problemId } = req.params;
   const userId = req.user._id;
-  const problem = await Problem.findOne({ id: problemId });
-  if (!problem) throw new ApiError(404, "Problem not found");
 
-  const user = await User.findById(userId).populate("solvedProblemList");
+  try {
+    const problem = await Problem.findOne({ id: problemId });
+    if (!problem) {
+      return res
+        .status(404)
+        .json(new ApiResponse(404, { success: false }, "Problem not found"));
+    }
 
-  const isSolved = user.solvedProblemList.some(
-    (solvedProblem) => solvedProblem.id === problemId
-  );
-
-  if (!isSolved) throw new ApiError(404, "Error checking problem status");
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(200, { success: true }, "Problem solved successfully")
+    const user = await User.findById(userId).populate("solvedProblemList");
+    const isSolved = user.solvedProblemList.some(
+      (solvedProblem) => solvedProblem.id === problemId
     );
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { success: true, solved: isSolved },
+          "Problem status retrieved successfully"
+        )
+      );
+  } catch (error) {
+    console.error("Error checking problem solved status:", error);
+    return res
+      .status(500)
+      .json(new ApiResponse(500, { success: false }, "Server error"));
+  }
 };
+
 export { addQuestions, getQuestions, submitQuestion, solvedStatus };
