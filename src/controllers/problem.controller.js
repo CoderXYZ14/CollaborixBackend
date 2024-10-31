@@ -1,4 +1,5 @@
 import { Problem } from "../models/problem.model.js";
+import { User } from "../models/user.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
@@ -69,5 +70,26 @@ const submitQuestion = async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, problem, "Problem marked as solved"));
+};
+
+const solvedStatus = async (req, res) => {
+  const { problemId } = req.params;
+  const userId = req.user._id;
+  const problem = await Problem.findOne({ id: problemId });
+  if (!problem) throw new ApiError(404, "Problem not found");
+
+  const user = await User.findById(userId).populate("solvedProblemList");
+
+  const isSolved = user.solvedProblemList.some(
+    (solvedProblem) => solvedProblem.id === problemId
+  );
+
+  if (!isSolved) throw new ApiError(404, "Error checking problem status");
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, { success: true }, "Problem solved successfully")
+    );
 };
 export { addQuestions, getQuestions, submitQuestion };
