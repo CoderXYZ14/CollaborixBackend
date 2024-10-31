@@ -112,12 +112,10 @@ const submitQuestion = async (req, res) => {
   const user = await User.findById(userId);
   if (!user) throw new ApiError(409, "User not found");
 
-  if (user.solvedProblemList.includes(problem._id))
-    throw new ApiError(409, "Problem already solved");
-
-  user.solvedProblemList.push(problem._id);
-  await user.save();
-
+  if (!user.solvedProblemList.includes(problem._id)) {
+    user.solvedProblemList.push(problem._id);
+    await user.save();
+  }
   return res
     .status(200)
     .json(new ApiResponse(200, problem, "Problem marked as solved"));
