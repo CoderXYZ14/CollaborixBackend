@@ -42,11 +42,32 @@ const addQuestions = async (req, res) => {
 
 const getQuestions = async (req, res) => {
   const problems = await Problem.find().sort("order");
-  if (!problems || problems.length === 0) {
+  if (!problems || problems.length === 0)
     throw new ApiError(404, "No questions found");
-  }
+
   return res
     .status(200)
     .json(new ApiResponse(200, problems, "Problems retrieved successfully"));
+};
+
+const submitQuestion = async (req, res) => {
+  const { problemId } = req.params;
+  const userId = req.user._id;
+
+  const problem = await Problem.findOne({ id: problemId });
+  if (!problem) throw new ApiError(409, "Problem not found");
+
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError(409, "User not found");
+
+  if (user.solvedProblemList.includes(problem._id))
+    throw new ApiError(409, "Problem already solved");
+
+  user.solvedProblemList.push(problem._id);
+  await user.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, problem, "Problem marked as solved"));
 };
 export { addQuestions, getQuestions };
