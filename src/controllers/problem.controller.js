@@ -92,4 +92,4 @@ const solvedStatus = async (req, res) => {
       new ApiResponse(200, { success: true }, "Problem solved successfully")
     );
 };
-export { addQuestions, getQuestions, submitQuestion };
+export { addQuestions, getQuestions, submitQuestion, solvedStatus };
