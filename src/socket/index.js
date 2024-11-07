@@ -42,6 +42,18 @@ export function initializeSocket(server) {
         });
       });
     });
+
+    socket.on("disconnecting", () => {
+      const rooms = [...socket.rooms];
+      rooms.forEach((roomId) => {
+        socket.in(roomId).emit(ACTIONS.DISCONNECTED, {
+          socketId: socketId,
+          username: userSocketMap[socket.id],
+        });
+      });
+      delete userSocketMap[socket.id];
+      socket.leave();
+    });
   });
 
   return io;
