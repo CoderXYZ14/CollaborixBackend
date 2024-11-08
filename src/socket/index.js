@@ -44,6 +44,13 @@ export function initializeSocket(server) {
       //type socket.in not io.to as io.to sends it to us also but we dont want that
     });
 
+    //handle code sync at beginning
+    socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {
+      //console.log(code);
+      io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
+      //type socket.in not io.to as io.to sends it to us also but we dont want that
+    });
+
     // Handle user disconnection
     socket.on("disconnecting", () => {
       const rooms = [...socket.rooms];
