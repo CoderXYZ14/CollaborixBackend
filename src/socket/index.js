@@ -2,38 +2,31 @@ import { Server } from "socket.io";
 import ACTIONS from "../utils/socket-actions/action.js";
 
 export function initializeSocket(server) {
-  const io = new Server(
-    server
-    //    {
-    //   cors: {
-    //     origin: process.env.CORS_ORIGIN || "http://localhost:3000",
-    //     methods: ["GET", "POST"],
-    //     credentials: true,
-    //   },
-    // }
-  );
-  const userSocketMap = {}; //better to use redis here
+  const io = new Server(server);
+  const userSocketMap = {}; // Keeps track of the usernames associated with socket IDs
 
-  function getAllConnectedCLients(roomId) {
-    // returns all clients of socket id
+  // Helper function to get all connected clients in a room
+  function getAllConnectedClients(roomId) {
     return Array.from(io.sockets.adapter.rooms.get(roomId) || [])
-      .map((socketId) => {
-        return {
-          socketId,
-          username: userSocketMap[socketId],
-        };
-      })
+      .map((socketId) => ({
+        socketId,
+        username: userSocketMap[socketId],
+      }))
       .filter(({ username }) => username !== undefined);
   }
 
   io.on("connection", (socket) => {
-    // console.log(`User connected: ${socket.id}`);
     socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
+      // Map the user's socket ID to their username
       userSocketMap[socket.id] = username;
+
+      // Join the specified room
       socket.join(roomId);
 
-      const clients = getAllConnectedCLients(roomId);
-      //console.log(clients);
+      // Get all connected clients in the room
+      const clients = getAllConnectedClients(roomId);
+
+      // Notify all clients in the room of the new connection
       clients.forEach(({ socketId }) => {
         io.to(socketId).emit(ACTIONS.JOINED, {
           clients,
@@ -43,30 +36,28 @@ export function initializeSocket(server) {
       });
     });
 
+    //hangle code change
+
+    socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
+      io.to(roomId).emit(ACTIONS.CODE_CHANGE, { code });
+    });
+
+    // Handle user disconnection
     socket.on("disconnecting", () => {
       const rooms = [...socket.rooms];
+
+      // Notify all rooms the user is about to leave
       rooms.forEach((roomId) => {
-        socket.in(roomId).emit(ACTIONS.DISCONNECTED, {
-          socketId: socketId,
+        socket.to(roomId).emit(ACTIONS.DISCONNECTED, {
+          socketId: socket.id,
           username: userSocketMap[socket.id],
         });
       });
+
+      // Clean up after disconnection
       delete userSocketMap[socket.id];
-      socket.leave();
     });
   });
 
   return io;
 }
-
-// io.on("connection", (socket) => {
-//   console.log(`User connected: ${socket.id}`);
-
-//   // Register event handlers
-//   handleUserConnection(io, socket);
-//   handleProblemEvents(io, socket);
-
-//   socket.on("disconnect", () => {
-//     console.log(`User disconnected: ${socket.id}`);
-//   });
-// });
