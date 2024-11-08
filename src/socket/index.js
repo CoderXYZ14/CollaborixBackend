@@ -39,7 +39,9 @@ export function initializeSocket(server) {
     //hangle code change
 
     socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
-      io.to(roomId).emit(ACTIONS.CODE_CHANGE, { code });
+      //console.log(code);
+      socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });
+      //type socket.in not io.to as io.to sends it to us also but we dont want that
     });
 
     // Handle user disconnection
