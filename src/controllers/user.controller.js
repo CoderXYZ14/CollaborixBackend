@@ -17,7 +17,6 @@ const generateAccessAndRefreshToken = async (userId) => {
   }
 };
 const registerUser = async (req, res) => {
-  //console.log("res:", res);
   const { fullName, email, username, password } = req.body;
 
   if (
@@ -59,7 +58,6 @@ const loginUser = asyncHandler(async (req, res) => {
 
   if (!identifier) throw new ApiError(400, "Please provide username or email");
 
-  // Find user by either username or email
   const user = await User.findOne({
     $or: [{ username: identifier }, { email: identifier }],
   });

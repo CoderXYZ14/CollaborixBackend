@@ -43,10 +43,8 @@ const addQuestions = async (req, res) => {
 
 const getQuestions = async (req, res, next) => {
   try {
-    // Get base problems list
     const problems = await Problem.find().sort("order");
 
-    // If user is authenticated, add solved status
     if (req.user) {
       const solvedProblems = new Set(
         req.user.solvedProblemList.map((p) => p.toString())

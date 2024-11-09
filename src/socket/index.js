@@ -3,7 +3,8 @@ import ACTIONS from "../utils/socket-actions/action.js";
 
 export function initializeSocket(server) {
   const io = new Server(server);
-  const userSocketMap = {}; // Keeps track of the usernames associated with socket IDs
+  const userSocketMap = {}; // Maps socket IDs to usernames
+  const roomCodeMap = {}; // Maps room IDs to the current code
 
   // Helper function to get all connected clients in a room
   function getAllConnectedClients(roomId) {
@@ -17,16 +18,14 @@ export function initializeSocket(server) {
 
   io.on("connection", (socket) => {
     socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
-      // Map the user's socket ID to their username
       userSocketMap[socket.id] = username;
-
-      // Join the specified room
       socket.join(roomId);
 
-      // Get all connected clients in the room
+      if (!roomCodeMap[roomId]) roomCodeMap[roomId] = ""; // Start with an empty code
+
       const clients = getAllConnectedClients(roomId);
 
-      // Notify all clients in the room of the new connection
+      // Notify existing clients about the new user
       clients.forEach(({ socketId }) => {
         io.to(socketId).emit(ACTIONS.JOINED, {
           clients,
@@ -34,28 +33,26 @@ export function initializeSocket(server) {
           socketId: socket.id,
         });
       });
+
+      io.to(socket.id).emit(ACTIONS.SYNC_CODE, {
+        code: roomCodeMap[roomId],
+      });
     });
 
-    //hangle code change
-
+    // Handle code changes
     socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
-      //console.log(code);
-      socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });
-      //type socket.in not io.to as io.to sends it to us also but we dont want that
+      roomCodeMap[roomId] = code;
+      socket.to(roomId).emit(ACTIONS.CODE_CHANGE, { code });
     });
 
-    //handle code sync at beginning
+    // Sync code on request
     socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {
-      //console.log(code);
       io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
-      //type socket.in not io.to as io.to sends it to us also but we dont want that
     });
 
-    // Handle user disconnection
+    // Handle disconnection
     socket.on("disconnecting", () => {
       const rooms = [...socket.rooms];
-
-      // Notify all rooms the user is about to leave
       rooms.forEach((roomId) => {
         socket.to(roomId).emit(ACTIONS.DISCONNECTED, {
           socketId: socket.id,
@@ -63,7 +60,6 @@ export function initializeSocket(server) {
         });
       });
 
-      // Clean up after disconnection
       delete userSocketMap[socket.id];
     });
   });
