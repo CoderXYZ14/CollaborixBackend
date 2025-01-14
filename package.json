@@ -5,6 +5,7 @@
   "description": "A collaborative coding platform",
   "main": "index.js",
   "scripts": {
+    "start": "node src/index.js",
     "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
   },
   "repository": {
