@@ -1,26 +1,17 @@
-// Keep your existing app.js for API routes
-import express from "express";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import userRouter from "./routes/user.routes.js";
-import problemRouter from "./routes/problem.routes.js";
+import dotenv from "dotenv";
+dotenv.config({ path: "./env" });
+import connectDB from "../src/db/index.js";
+import { app } from "../src/app.js";
+import { createServer } from "http";
 
-const app = express();
+dotenv.config({ path: "./env" });
 
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
+const server = createServer(app);
+
+connectDB()
+  .then(() => {
+    server.listen(process.env.PORT || 8000, () => {
+      console.log(`Server is running at port ${process.env.PORT}`);
+    });
   })
-);
-
-app.use(express.json({ limit: "16kb" }));
-app.use(express.urlencoded({ extended: true, limit: "16kb" }));
-app.use(express.static("public"));
-app.use(cookieParser());
-
-app.use("/api/v1/users", userRouter);
-app.use("/api/v1/problems", problemRouter);
-
-export { app };
+  .catch((error) => console.log("MongoDB connection failed !!! ", error));

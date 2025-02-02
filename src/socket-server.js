@@ -1,6 +1,5 @@
 import { createServer } from "http";
 import express from "express";
-import { Server } from "socket.io";
 import { initializeSocket } from "./socket/index.js";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -11,11 +10,28 @@ const app = express();
 const server = createServer(app);
 
 // CORS for Socket.IO
+const corsOrigin =
+  process.env.CORS_ORIGIN?.trim() || "https://collaborix-phi.vercel.app";
+
+// Configure CORS with more detailed options
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "https://collaborix-phi.vercel.app",
-    methods: ["GET", "POST"],
+    origin: function (origin, callback) {
+      // Remove trailing slash for comparison
+      const normalizedOrigin = origin?.replace(/\/$/, "");
+      const normalizedAllowedOrigin = corsOrigin.replace(/\/$/, "");
+
+      if (!origin || normalizedOrigin === normalizedAllowedOrigin) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Added OPTIONS explicitly
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    exposedHeaders: ["Set-Cookie"],
+    maxAge: 86400, // Cache preflight request results for 24 hours
   })
 );
 
