@@ -6,7 +6,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js",
+    "socket": "node src/socket-server.js",
+    "dev:socket": "nodemon src/socket-server.js"
   },
   "repository": {
     "type": "git",

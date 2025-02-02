@@ -1,21 +1,26 @@
-import dotenv from "dotenv";
-dotenv.config({ path: "./env" });
-import connectDB from "../src/db/index.js";
-import { app } from "../src/app.js";
-import { initializeSocket } from "../src/socket/index.js";
-import { createServer } from "http";
+// Keep your existing app.js for API routes
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import userRouter from "./routes/user.routes.js";
+import problemRouter from "./routes/problem.routes.js";
 
-dotenv.config({ path: "./env" });
+const app = express();
 
-const server = createServer(app);
-const io = initializeSocket(server);
-
-connectDB()
-  .then(() => {
-    server.listen(process.env.PORT || 8000, () => {
-      console.log(`Server is running at port ${process.env.PORT}`);
-    });
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   })
-  .catch((error) => console.log("MongoDB connection failed !!! ", error));
+);
 
-app.set("io", io);
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.static("public"));
+app.use(cookieParser());
+
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/problems", problemRouter);
+
+export { app };
