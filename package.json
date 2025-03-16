@@ -5,8 +5,8 @@
   "description": "A collaborative coding platform",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js",
+    "start": "node api/index.js",
+    "dev": "nodemon -r dotenv/config --experimental-json-modules api/index.js",
     "socket": "node src/socket-server.js",
     "dev:socket": "nodemon src/socket-server.js"
   },
@@ -17,14 +17,14 @@
   "author": "Shahwaiz Islam & Baquar Hasasan",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/CoderXYZ14/CollaborixBackend/issues"
+    "url": "https://github.com/CoderXYZ14/CollaborixBackend"
   },
-  "homepage": "https://github.com/CoderXYZ14/CollaborixBackend#readme",
+  "homepage": "https://collaborix-phi.vercel.app",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "express": "^4.19.2",
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",

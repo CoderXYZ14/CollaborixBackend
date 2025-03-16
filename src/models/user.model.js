@@ -39,7 +39,15 @@ const userSchema = new Schema(
     ],
     password: {
       type: String,
-      required: [true, "Password is required"],
+      required: function () {
+        // Password is required only if the user is not signing up with Google
+        return !this.googleId;
+      },
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows null values (for non-Google users)
     },
     refreshToken: {
       type: String,
@@ -51,7 +59,11 @@ const userSchema = new Schema(
 );
 
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  // Only hash the password if it exists and has been modified
+  if (!this.isModified("password") || !this.password) {
+    return next();
+  }
+
   try {
     const salt = await bcryptjs.genSalt(SALT_ROUNDS);
     this.password = await bcryptjs.hash(this.password, salt);
@@ -62,8 +74,13 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.methods.isPasswordCorrect = function (password) {
+  // Only compare passwords if a password exists for this user
+  if (!this.password) {
+    return false;
+  }
   return bcryptjs.compare(password, this.password);
 };
+
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
